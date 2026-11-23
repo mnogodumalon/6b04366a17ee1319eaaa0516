@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "language": "de",
+  "understanding": {
+    "summary": "Der Essensplaner hilft dir, schnell zu entscheiden, was du isst, und zu wissen, was du dafür einkaufen musst. Du pflegst Gerichte mit Zubereitungszeit, Eiweiß pro Portion, kurzen Schritten, Foto und der Angabe, ob gekocht werden muss. Zutaten mit Einheit und Supermarkt-Abteilung gehören je Gericht mit Menge für eine Portion dazu. Drei Abläufe stehen auf der Übersicht ganz oben: „Was esse ich jetzt“, „Gekocht“ und „Einkauf planen“. Darunter siehst du, was du zuletzt gekocht hast und welche Gerichte du lange nicht gegessen hast. Alles ist für das Handy gedacht.",
+    "outside_users": [],
+    "roles": [
+      "Privatperson, die plant, kocht und einkauft"
+    ],
+    "main_tasks": [
+      "Passendes Gericht nach Zeit, Eiweiß und Zutat finden",
+      "Gekochtes Gericht mit wenigen Tipps festhalten",
+      "Einkaufsliste aus mehreren Gerichten und Portionen erzeugen und im Laden abhaken"
+    ],
+    "platform_roles": [
+      {
+        "persona": "Privatperson, die plant, kocht und einkauft",
+        "role": "administrator",
+        "apps": [
+          "zutaten",
+          "gerichte",
+          "zutaten_je_gericht",
+          "kochprotokoll",
+          "einkaufslisten",
+          "einkaufspositionen"
+        ]
+      }
+    ],
+    "wish_kind": "plain",
+    "wish_signals": []
+  },
+  "flows": [
+    {
+      "slug": "gekocht",
+      "label": {
+        "de": "Gekocht",
+        "en": "Cooked"
+      },
+      "description": "Mit wenigen Tipps festhalten, dass ein Gericht gekocht wurde. Das Datum ist heute.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "kochprotokoll",
+          "op": "create",
+          "when": "always",
+          "fields": {
+            "gericht": "picked",
+            "datum": "derived:today",
+            "tatsaechliche_dauer": "user",
+            "notiz": "user",
+            "wieder_machen": "user"
+          },
+          "multiple": false,
+          "needs": {},
+          "defaults": []
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `gekocht` — Gekocht\nMit wenigen Tipps festhalten, dass ein Gericht gekocht wurde. Das Datum ist heute.\n\n## Your hook — import it, never rebuild what it owns\n`import { useGekochtFlow } from '@/lib/journey/flows/Gekocht';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick: gericht), `initial`, `messages`. The hook's docblock in .lane-context.md shows the exact call. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Gericht wählen\n2. Optional tatsächliche Dauer eintragen\n3. Optional Notiz für das nächste Mal eintragen\n4. Angeben, ob man es wieder machen würde\n5. Speichern\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- creates `kochprotokoll`:\n    - `gericht`: from the record the user picks in this flow\n    - `datum`: derived: today() — set it in the plan step, never ask\n    - `tatsaechliche_dauer`: the user enters it (bind it through the layer: form.field/…)\n    - `notiz`: the user enters it (bind it through the layer: form.field/…)\n    - `wieder_machen`: the user enters it (bind it through the layer: form.field/…)\n\n## Reads\n- `gerichte` columns name, zubereitungszeit\n\n## Success page\n- shows: `kochprotokoll.gericht`, `kochprotokoll.datum`\n- next flows to offer: `einkauf-planen`\n\n## Never write these — another flow or a tool owns them\n- `einkaufslisten.titel` (owner: intent `einkauf-planen`)\n- `einkaufslisten.erstellt_am` (owner: intent `einkauf-planen`)\n- `einkaufslisten.status` (owner: intent `einkauf-planen`)\n- `einkaufspositionen.einkaufsliste` (owner: intent `einkauf-planen`)\n- `einkaufspositionen.zutat` (owner: intent `einkauf-planen`)\n- `einkaufspositionen.menge` (owner: intent `einkauf-planen`)\n- `einkaufspositionen.abteilung` (owner: intent `einkauf-planen`)\n- `einkaufspositionen.abgehakt` (owner: intent `einkauf-planen`)\n"
+    },
+    {
+      "slug": "einkauf-planen",
+      "label": {
+        "de": "Einkauf planen",
+        "en": "Plan shopping"
+      },
+      "description": "Mehrere Gerichte mit je einer Portionszahl wählen; daraus entsteht eine gespeicherte Einkaufsliste, in der gleiche Zutaten zu einer Zeile zusammengezählt und nach Abteilung sortiert sind.",
+      "priority": "must",
+      "writes": [
+        {
+          "entity": "einkaufslisten",
+          "op": "create",
+          "when": "always",
+          "fields": {
+            "titel": "user",
+            "erstellt_am": "derived:today",
+            "status": "fixed:offen"
+          },
+          "multiple": false,
+          "needs": {},
+          "defaults": []
+        },
+        {
+          "entity": "einkaufspositionen",
+          "op": "create",
+          "when": "always",
+          "fields": {
+            "einkaufsliste": "picked",
+            "zutat": "picked",
+            "menge": "derived:computed:Summe aus Menge für eine Portion mal Zahl der Portionen über alle gewählten Gerichte, je Zutat eine Zeile",
+            "abteilung": "derived:from_pick:zutaten.abteilung",
+            "abgehakt": "fixed:false"
+          },
+          "multiple": true,
+          "needs": {},
+          "defaults": []
+        }
+      ],
+      "required": [],
+      "brief": "# Flow `einkauf-planen` — Einkauf planen\nMehrere Gerichte mit je einer Portionszahl wählen; daraus entsteht eine gespeicherte Einkaufsliste, in der gleiche Zutaten zu einer Zeile zusammengezählt und nach Abteilung sortiert sind.\n\n## Your hook — import it, never rebuild what it owns\n`import { useEinkaufPlanenFlow } from '@/lib/journey/flows/EinkaufPlanen';` — generated from the Schreibliste below. It OWNS the form(s), one record search per picked field (columns and filter from the plan) and the submit plan with every fixed and derived value. You compose: `flow.forms.<entity>` for <Bound>/<Field>, `{...flow.picks.<field>.select} {...flow.pick('<field>')}` (or `flow.pickMany` for a multi pick) for <EntitySelectStep>, `flow.validateStep(n)` in StepNav.onNext, `flow.submit` + `flow.formList` for SummaryStep/SuccessStep, `flow.reset()`; what the hook does not own reads through its door `flow.port` — availability `useOccupancy(flow.port, '<entity>', { resource })`, a count `useRecordCount(flow.port, …)` — never import servicePort next to the hook. Options: `steps` (field → step), `items` (how a hit reads, per pick: einkaufsliste, zutat), `initial`, `messages`, and `compute` — REQUIRED, the plan leaves these rules to you: menge. The hook's docblock in .lane-context.md shows the exact call. Never import servicePort, useStepForm, useJourneySubmit, useRecordSearch or useDashboardData in this page — check-intents refuses a page that uses the hook and any of them.\n\n## Steps (in this order)\n1. Titel der Liste eingeben\n2. Mehrere Gerichte wählen und je Gericht die Zahl der Portionen angeben\n3. Die Zutaten aller Gerichte werden mit Menge mal Portionen zusammengezählt, gleiche Zutaten ergeben eine Zeile\n4. Die Liste nach Abteilung sortiert ansehen und speichern\n5. Im Laden die Positionen abhaken\n\n## Schreibliste — the ONLY writes this flow makes (the gate compares your plan steps with this list)\n- creates `einkaufslisten`:\n    - `titel`: the user enters it (bind it through the layer: form.field/…)\n    - `erstellt_am`: derived: today() — set it in the plan step, never ask\n    - `status`: fixed value `offen` — set it in the plan step's values, never ask\n- creates `einkaufspositionen` — SEVERAL per run: `flow.lists.einkaufspositionen` holds the entries (add/remove/edit), render the editor's fields inside `<ListEntries list={flow.lists.einkaufspositionen}>` on their own step; the plan creates one record per entry:\n    - `einkaufsliste`: from the record the user picks in this flow\n    - `zutat`: from the record the user picks in this flow\n    - `menge`: derived (computed)\n    - `abteilung`: derived from the picked record's `zutaten.abteilung` — never ask\n    - `abgehakt`: fixed value `false` — set it in the plan step's values, never ask\n\n## Reads\n- `gerichte` columns name, zubereitungszeit, eiweiss\n- `zutaten_je_gericht` columns gericht, zutat, menge_pro_portion\n\n## Narrow these picks (the plan has no filter for them — J-3)\n- `einkaufsliste` picks `einkaufslisten`, but the plan calls 'status' its status field: pass `where: { einkaufsliste: r => … }` to the hook so the step offers only the records that belong here (the open ones, the ones of the picked parent) — never every record of every state\n\n## Success page\n- shows: `einkaufslisten.titel`, `einkaufspositionen.zutat`, `einkaufspositionen.menge`, `einkaufspositionen.abteilung`, `einkaufspositionen.abgehakt`\n- next flows to offer: `gekocht`\n\n## Never write these — another flow or a tool owns them\n- `kochprotokoll.gericht` (owner: intent `gekocht`)\n- `kochprotokoll.datum` (owner: intent `gekocht`)\n- `kochprotokoll.tatsaechliche_dauer` (owner: intent `gekocht`)\n- `kochprotokoll.notiz` (owner: intent `gekocht`)\n- `kochprotokoll.wieder_machen` (owner: intent `gekocht`)\n"
+    }
+  ],
+  "public_pages": [],
+  "tools": [],
+  "covered_by_platform": [
+    {
+      "wish": "Zutaten als eigene Liste pflegen",
+      "feature": "record_form"
+    },
+    {
+      "wish": "Gerichte, Zutaten und Kochprotokoll ansehen, suchen und sortieren",
+      "feature": "search_filter"
+    },
+    {
+      "wish": "Foto zum Gericht",
+      "feature": "record_attachments"
+    }
+  ],
+  "ownership": {
+    "kochprotokoll": {
+      "gericht": "intent:gekocht",
+      "datum": "intent:gekocht",
+      "tatsaechliche_dauer": "intent:gekocht",
+      "notiz": "intent:gekocht",
+      "wieder_machen": "intent:gekocht"
+    },
+    "einkaufslisten": {
+      "titel": "intent:einkauf-planen",
+      "erstellt_am": "intent:einkauf-planen",
+      "status": "intent:einkauf-planen"
+    },
+    "einkaufspositionen": {
+      "einkaufsliste": "intent:einkauf-planen",
+      "zutat": "intent:einkauf-planen",
+      "menge": "intent:einkauf-planen",
+      "abteilung": "intent:einkauf-planen",
+      "abgehakt": "intent:einkauf-planen"
+    }
+  },
+  "dashboard": {
+    "focus": [
+      "Die drei Abläufe „Was esse ich jetzt“, „Gekocht“ und „Einkauf planen“ ganz oben, groß und mit dem Daumen bedienbar",
+      "Zuletzt gekochte Gerichte aus dem Kochprotokoll",
+      "Gerichte, die lange nicht gekocht wurden",
+      "Offene Einkaufslisten"
+    ],
+    "hints": [
+      "Handy zuerst: große Kacheln, eine Spalte",
+      "Gerichte ohne Kocheintrag zählen als lange nicht gegessen",
+      "Kochprotokoll nach Datum absteigend sortieren"
+    ],
+    "views": [],
+    "writes": [
+      {
+        "entity": "einkaufspositionen",
+        "fields": [
+          "abgehakt"
+        ],
+        "how": "button",
+        "rule": "Der Knopf setzt abgehakt nur an der angetippten Einkaufsposition, an der Einkaufsliste im Laden."
+      }
+    ],
+    "wishes": []
+  }
+}

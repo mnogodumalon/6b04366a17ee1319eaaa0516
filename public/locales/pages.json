@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "en": {
+      "+{0} weitere": "+{0} more",
+      "Alle Gerichte waren zuletzt dran.": "All dishes were cooked recently.",
+      "Alles abgehakt — Liste kann erledigt werden.": "All checked off — list can be completed.",
+      "Einkauf planen": "Plan shopping",
+      "Erstes Gericht anlegen": "Add first dish",
+      "Gekocht": "Cooked",
+      "Gekocht festhalten": "Log as cooked",
+      "Keine offene Liste.": "No open list.",
+      "Lange nicht gekocht": "Not cooked in a while",
+      "Liste aus mehreren Gerichten": "List from multiple dishes",
+      "Mit wenigen Tipps festhalten": "Log with a few taps",
+      "Nach Zeit, Eiweiß und Zutat finden": "Find by time, protein, and ingredient",
+      "Neues Gericht": "New dish",
+      "Noch kein Kocheintrag — halte dein erstes gekochtes Gericht fest.": "No cooking entries yet — log your first cooked dish.",
+      "Noch keine Gerichte angelegt.": "No dishes added yet.",
+      "Noch nichts gekocht — wie wäre es mit {0}?": "Nothing cooked yet — how about {0}?",
+      "Noch nie gekocht": "Never cooked",
+      "Offene Einkaufslisten": "Open shopping lists",
+      "Richte deinen Essensplaner ein — lege dein erstes Gericht an.": "Set up your meal planner — add your first dish.",
+      "Was esse ich jetzt?": "What should I eat now?",
+      "Zuletzt gab es {0} ({1}).": "Last had {0} ({1}).",
+      "Zuletzt gab es {0} ({1}). Mal wieder dran: {2}.": "Last had {0} ({1}). Time for {2} again.",
+      "Zuletzt gekocht": "Last cooked",
+      "gestern": "yesterday",
+      "heute": "today",
+      "vor {0} Tagen": "{0} days ago",
+      "vor {0} Wochen": "{0} weeks ago",
+      "{0} von {1} abgehakt": "{0} of {1} checked off",
+      "{0} — abgehakt": "{0} — checked off",
+      "{0} — wieder offen": "{0} — open again"
+    }
+  },
+  "v": 1
+}

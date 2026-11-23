@@ -1,0 +1,33 @@
+{
+  "ZutatenDialog.tsx": {
+    "name": "z. B. Spaghetti",
+    "abteilung": "z. B. Backwaren, Tiefkühl"
+  },
+  "GerichteDialog.tsx": {
+    "name": "z. B. Linsencurry",
+    "zubereitungszeit": "z. B. 30",
+    "eiweiss": "z. B. 25",
+    "schritte": "Eine Schritt pro Zeile"
+  },
+  "ZutatenJeGerichtDialog.tsx": {
+    "gericht": "Welches Gericht?",
+    "zutat": "Welche Zutat?",
+    "menge_pro_portion": "z. B. 150"
+  },
+  "KochprotokollDialog.tsx": {
+    "gericht": "Welches Gericht?",
+    "datum": "Wann hast du gekocht?",
+    "tatsaechliche_dauer": "z. B. 45",
+    "notiz": "Was beim nächsten Mal anders?"
+  },
+  "EinkaufslistenDialog.tsx": {
+    "titel": "z. B. Wocheneinkauf",
+    "erstellt_am": "Wann wurde sie erstellt?"
+  },
+  "EinkaufspositionenDialog.tsx": {
+    "einkaufsliste": "Welche Einkaufsliste?",
+    "zutat": "Welche Zutat?",
+    "menge": "z. B. 500",
+    "abteilung": "z. B. Backwaren, Getränke"
+  }
+}

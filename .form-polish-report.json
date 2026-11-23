@@ -1,0 +1,47 @@
+{
+  "entities": {
+    "Zutaten": {
+      "placeholders_set": 2,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Zutaten sind reine Stammdaten ohne numerische Felder, daher keine Formeln und keine sinnvollen Standardwerte."
+    },
+    "Gerichte": {
+      "placeholders_set": 4,
+      "defaults_keys": [
+        "kochen_noetig"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formeln, da Zubereitungszeit und Eiweiß unabhängige Stammdaten ohne Rechenkette sind."
+    },
+    "Zutaten je Gericht": {
+      "placeholders_set": 3,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Keine Formel, da nur eine Menge pro Portion erfasst wird und kein Preis, keine Anzahl oder Datumspaar für eine sinnvolle Berechnung vorhanden ist."
+    },
+    "Kochprotokoll": {
+      "placeholders_set": 4,
+      "defaults_keys": [
+        "datum"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formel, da die tatsächliche Dauer eine Eingabe ist und kein Preis oder Mengenbezug berechnet werden kann."
+    },
+    "Einkaufslisten": {
+      "placeholders_set": 2,
+      "defaults_keys": [
+        "erstellt_am",
+        "status"
+      ],
+      "computed_keys": [],
+      "reason": "Keine Formeln, da die Einkaufsliste reine Stammdaten ohne numerische Berechnung oder Datumspaare enthält."
+    },
+    "Einkaufspositionen": {
+      "placeholders_set": 4,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Keine Formel, da kein Preis oder Datumspaar erreichbar ist und die Menge direkt eingegeben wird."
+    }
+  }
+}
