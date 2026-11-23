@@ -39,6 +39,12 @@ export type MessageFieldKey<E extends EntityKey> = E extends keyof MessageFields
 
 export const REQUIRED_MESSAGES: { [E in EntityKey]?: Partial<Record<MessageFieldKey<E>, string>> } = {
   // <custom:messages>
+  zutaten: { name: "Bitte den Namen der Zutat eingeben.", einheit: "Bitte eine Einheit wählen.", abteilung: "Bitte eine Abteilung wählen." },
+  gerichte: { name: "Bitte den Namen des Gerichts eingeben.", zubereitungszeit: "Bitte die Zubereitungszeit in Minuten eingeben.", eiweiss: "Bitte das Eiweiß pro Portion in Gramm eingeben." },
+  zutaten_je_gericht: { gericht: "Bitte ein Gericht auswählen.", zutat: "Bitte eine Zutat auswählen.", menge_pro_portion: "Bitte die Menge für eine Portion eingeben." },
+  kochprotokoll: { gericht: "Bitte ein Gericht auswählen.", datum: "Bitte das Datum wählen." },
+  einkaufslisten: { titel: "Bitte einen Titel für die Liste eingeben.", erstellt_am: "Bitte das Datum wählen.", status: "Bitte einen Status wählen." },
+  einkaufspositionen: { einkaufsliste: "Bitte eine Einkaufsliste auswählen.", zutat: "Bitte eine Zutat auswählen.", menge: "Bitte die Gesamtmenge eingeben." },
   // </custom:messages>
 };
 
