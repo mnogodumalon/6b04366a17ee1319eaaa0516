@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Input } from '@/components/ui/input';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import {
   IconToolsKitchen2, IconChefHat, IconShoppingCart, IconPlus, IconSquare, IconSquareCheck,
@@ -17,9 +18,12 @@ import { tx, appLabel } from '@/i18n';
 
 export default function DashboardOverview({ data }: { data: DashboardData }) {
   const {
-    gerichte, kochprotokoll, einkaufslisten, einkaufspositionen, zutatenMap,
+    gerichte, zutatenJeGericht, kochprotokoll, einkaufslisten, einkaufspositionen, zutatenMap,
     setEinkaufspositionen, fetchAll,
   } = data;
+  const [maxTime, setMaxTime] = useState('');
+  const [minProtein, setMinProtein] = useState('');
+  const [ingredient, setIngredient] = useState('');
   const clock = useClock();
   const today = format(clock, 'yyyy-MM-dd');
   const crud = useEntityCrud(data, {
@@ -103,8 +107,36 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
     context = tx`Noch nichts gekocht — wie wäre es mit ${names}?`;
   }
 
+  const ingredientsOf = useMemo(() => {
+    const m = new Map<string, { name: string; menge?: number; einheit?: string }[]>();
+    for (const z of zutatenJeGericht) {
+      const gid = extractRecordId(z.fields.gericht);
+      const zid = extractRecordId(z.fields.zutat);
+      if (!gid || !zid) continue;
+      const zt = zutatenMap.get(zid);
+      const arr = m.get(gid) ?? [];
+      arr.push({ name: zt?.fields.name ?? '', menge: z.fields.menge_pro_portion, einheit: zt?.fields.einheit?.label });
+      m.set(gid, arr);
+    }
+    return m;
+  }, [zutatenJeGericht, zutatenMap]);
+
+  const matches = useMemo(() => {
+    const maxMin = parseFloat(maxTime.replace(',', '.'));
+    const minProt = parseFloat(minProtein.replace(',', '.'));
+    const q = ingredient.trim().toLowerCase();
+    return gerichte
+      .filter(g => {
+        if (!isNaN(maxMin) && (g.fields.zubereitungszeit == null || g.fields.zubereitungszeit > maxMin)) return false;
+        if (!isNaN(minProt) && (g.fields.eiweiss == null || g.fields.eiweiss < minProt)) return false;
+        if (q && !(ingredientsOf.get(g.record_id) ?? []).some(i => i.name.toLowerCase().includes(q))) return false;
+        return true;
+      })
+      .sort((a, b) => (a.fields.zubereitungszeit ?? 9999) - (b.fields.zubereitungszeit ?? 9999));
+  }, [gerichte, ingredientsOf, maxTime, minProtein, ingredient]);
+  const filtering = maxTime !== '' || minProtein !== '' || ingredient !== '';
+
   const tiles = [
-    { href: '#/intents/was-esse-ich-jetzt', icon: <IconToolsKitchen2 size={28} />, title: tx('Was esse ich jetzt?'), sub: tx('Nach Zeit, Eiweiß und Zutat finden'), cls: 'bg-primary text-primary-foreground' },
     { href: '#/intents/gekocht', icon: <IconChefHat size={28} />, title: tx('Gekocht'), sub: tx('Mit wenigen Tipps festhalten'), cls: 'bg-card text-foreground border' },
     { href: '#/intents/einkauf-planen', icon: <IconShoppingCart size={28} />, title: tx('Einkauf planen'), sub: tx('Liste aus mehreren Gerichten'), cls: 'bg-card text-foreground border' },
   ];
@@ -128,7 +160,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {tiles.map(t => (
           <a
             key={t.href}
@@ -143,6 +175,65 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
           </a>
         ))}
       </div>
+
+      <section className="rounded-2xl border bg-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+          <IconToolsKitchen2 size={20} className="shrink-0 text-primary" />
+          <h2 className="text-base font-semibold">{tx('Was esse ich jetzt?')}</h2>
+        </div>
+        <div className="px-4 pb-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <label className="space-y-1 min-w-0">
+            <span className="text-xs text-muted-foreground">{tx('Zeit (Minuten, maximal)')}</span>
+            <Input inputMode="numeric" value={maxTime} onChange={e => setMaxTime(e.target.value)} placeholder="30" />
+          </label>
+          <label className="space-y-1 min-w-0">
+            <span className="text-xs text-muted-foreground">{tx('Eiweiß-Ziel (mindestens)')}</span>
+            <Input inputMode="numeric" value={minProtein} onChange={e => setMinProtein(e.target.value)} placeholder="30" />
+          </label>
+          <label className="space-y-1 min-w-0">
+            <span className="text-xs text-muted-foreground">{tx('Zutat')}</span>
+            <Input value={ingredient} onChange={e => setIngredient(e.target.value)} placeholder={tx('z. B. Reis')} />
+          </label>
+        </div>
+        <div className="px-4 pb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span>{countOf('gerichte', matches.length, appLabel('gerichte'))}</span>
+          {filtering && (
+            <button type="button" className="font-medium text-primary" onClick={() => { setMaxTime(''); setMinProtein(''); setIngredient(''); }}>
+              {tx('Filter zurücksetzen')}
+            </button>
+          )}
+        </div>
+        {matches.length === 0 ? (
+          <p className="px-4 pb-4 text-sm text-muted-foreground">{tx('Kein Gericht passt — lockere einen Filter.')}</p>
+        ) : (
+          <div className="divide-y border-t max-h-[420px] overflow-y-auto">
+            {matches.map(g => {
+              const ings = ingredientsOf.get(g.record_id) ?? [];
+              return (
+                <button
+                  key={g.record_id}
+                  type="button"
+                  onClick={() => crud.gerichte.openDetail(g)}
+                  className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted/40 min-h-[56px]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{g.fields.name ?? '—'}</div>
+                    <div className="text-xs text-muted-foreground flex flex-wrap gap-x-3">
+                      {g.fields.zubereitungszeit != null && <span>{g.fields.zubereitungszeit} {tx('Min.')}</span>}
+                      {g.fields.eiweiss != null && <span>{g.fields.eiweiss} {tx('g Eiweiß')}</span>}
+                    </div>
+                    {ings.length > 0 && (
+                      <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        {ings.map(i => `${i.name}${i.menge != null ? ` ${i.menge}${i.einheit ? ' ' + i.einheit : ''}` : ''}`).join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       <DashboardGrid
         variant="split"

@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "flows": [
+    {
+      "path": "/intents/gekocht",
+      "label": "Gekocht",
+      "description": "Mit wenigen Tipps festhalten, dass ein Gericht gekocht wurde. Das Datum ist heute.",
+      "file": "src/pages/intents/GekochtPage.tsx",
+      "summary": "/**\n * Gekocht — 5-Schritt-Wizard: festhalten, dass ein Gericht gekocht wurde (Datum = heute).\n * Steps: 1) Gericht wählen → 2) Tatsächliche Dauer → 3) Notiz fürs nächste Mal → 4) Wieder machen? → 5) Prüfen & speichern.\n * Reads: gerichte. Writes: kochprotokoll (via useGekochtFlow).\n * Composes: IntentWizardShell, EntitySelectStep, Bound, StepNav, SummaryStep, SuccessStep.\n */",
+      "components": [
+        "Bound",
+        "EntitySelectStep",
+        "IntentWizardShell",
+        "StepNav",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    },
+    {
+      "path": "/intents/einkauf-planen",
+      "label": "Einkauf planen",
+      "description": "Mehrere Gerichte mit Portionen wählen; daraus entsteht eine nach Abteilung sortierte Einkaufsliste.",
+      "file": "src/pages/intents/EinkaufPlanenPage.tsx",
+      "summary": "/**\n * Einkauf planen — 4-Schritt-Wizard.\n * Steps: 1) Titel der Liste → 2) Gerichte wählen, je Gericht Portionen → 3) Zutaten summiert, nach Abteilung sortiert → 4) Prüfen & speichern.\n * Reads: gerichte, zutaten_je_gericht, zutaten (über flow.port). Writes: einkaufslisten, einkaufspositionen (über useEinkaufPlanenFlow).\n * Composes: IntentWizardShell, Bound, StepNav, SummaryStep, SuccessStep.\n */",
+      "components": [
+        "Bound",
+        "Button",
+        "EntitySelectStep",
+        "Input",
+        "IntentWizardShell",
+        "ListEntries",
+        "StepNav",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    }
+  ],
+  "unregistered_pages": []
+}
