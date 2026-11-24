@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import {
   IconToolsKitchen2, IconChefHat, IconShoppingCart, IconPlus, IconSquare, IconSquareCheck,
@@ -24,6 +25,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
   const [maxTime, setMaxTime] = useState('');
   const [minProtein, setMinProtein] = useState('');
   const [ingredient, setIngredient] = useState('');
+  const [noCookOnly, setNoCookOnly] = useState(false);
   const clock = useClock();
   const today = format(clock, 'yyyy-MM-dd');
   const crud = useEntityCrud(data, {
@@ -121,20 +123,35 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
     return m;
   }, [zutatenJeGericht, zutatenMap]);
 
+  // Je Gericht: neueste Notiz und neueste Zeit (fehlt sie im neuesten Eintrag, die letzte vorhandene; recent ist neueste zuerst)
+  const lastEntryOf = useMemo(() => {
+    const m = new Map<string, { notiz?: string; dauer?: number }>();
+    for (const k of recent) {
+      const id = extractRecordId(k.fields.gericht);
+      if (!id) continue;
+      const cur = m.get(id) ?? {};
+      const notiz = cur.notiz || k.fields.notiz?.trim() || undefined;
+      const dauer = cur.dauer ?? k.fields.tatsaechliche_dauer ?? undefined;
+      m.set(id, { notiz, dauer });
+    }
+    return m;
+  }, [recent]);
+
   const matches = useMemo(() => {
     const maxMin = parseFloat(maxTime.replace(',', '.'));
     const minProt = parseFloat(minProtein.replace(',', '.'));
     const q = ingredient.trim().toLowerCase();
     return gerichte
       .filter(g => {
+        if (noCookOnly && g.fields.kochen_noetig !== false) return false;
         if (!isNaN(maxMin) && (g.fields.zubereitungszeit == null || g.fields.zubereitungszeit > maxMin)) return false;
         if (!isNaN(minProt) && (g.fields.eiweiss == null || g.fields.eiweiss < minProt)) return false;
         if (q && !(ingredientsOf.get(g.record_id) ?? []).some(i => i.name.toLowerCase().includes(q))) return false;
         return true;
       })
       .sort((a, b) => (a.fields.zubereitungszeit ?? 9999) - (b.fields.zubereitungszeit ?? 9999));
-  }, [gerichte, ingredientsOf, maxTime, minProtein, ingredient]);
-  const filtering = maxTime !== '' || minProtein !== '' || ingredient !== '';
+  }, [gerichte, ingredientsOf, maxTime, minProtein, ingredient, noCookOnly]);
+  const filtering = maxTime !== '' || minProtein !== '' || ingredient !== '' || noCookOnly;
 
   const tiles = [
     { href: '#/intents/gekocht', icon: <IconChefHat size={28} />, title: tx('Gekocht'), sub: tx('Mit wenigen Tipps festhalten'), cls: 'bg-card text-foreground border' },
@@ -195,10 +212,14 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
             <Input value={ingredient} onChange={e => setIngredient(e.target.value)} placeholder={tx('z. B. Reis')} />
           </label>
         </div>
+        <label className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-3 min-h-[48px] cursor-pointer">
+          <span className="text-sm font-medium">{tx('Nur Gerichte ohne Kochen')}</span>
+          <Switch checked={noCookOnly} onCheckedChange={setNoCookOnly} />
+        </label>
         <div className="px-4 pb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
           <span>{countOf('gerichte', matches.length, appLabel('gerichte'))}</span>
           {filtering && (
-            <button type="button" className="font-medium text-primary" onClick={() => { setMaxTime(''); setMinProtein(''); setIngredient(''); }}>
+            <button type="button" className="font-medium text-primary min-h-[44px] px-2" onClick={() => { setMaxTime(''); setMinProtein(''); setIngredient(''); setNoCookOnly(false); }}>
               {tx('Filter zurücksetzen')}
             </button>
           )}
@@ -209,6 +230,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
           <div className="divide-y border-t max-h-[420px] overflow-y-auto">
             {matches.map(g => {
               const ings = ingredientsOf.get(g.record_id) ?? [];
+              const last = lastEntryOf.get(g.record_id);
               return (
                 <button
                   key={g.record_id}
@@ -225,6 +247,17 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
                     {ings.length > 0 && (
                       <div className="text-xs text-muted-foreground line-clamp-2 mt-1">
                         {ings.map(i => `${i.name}${i.menge != null ? ` ${i.menge}${i.einheit ? ' ' + i.einheit : ''}` : ''}`).join(' · ')}
+                      </div>
+                    )}
+                    {last && (last.dauer != null || last.notiz) && (
+                      <div className="mt-1 space-y-0.5 text-xs">
+                        {last.dauer != null && (
+                          <div className="inline-flex items-center gap-1 text-foreground">
+                            <IconClock size={12} className="shrink-0" />
+                            <span>{tx('Letztes Mal')}: {last.dauer} {tx('Min.')}</span>
+                          </div>
+                        )}
+                        {last.notiz && <div className="text-muted-foreground line-clamp-2 break-words">„{last.notiz}“</div>}
                       </div>
                     )}
                   </div>
